@@ -82,10 +82,7 @@ let verticalShift = 4;
 
 let maxLength = pushes.length * rocks.length;
 let maxSize = maxLength * 2 + 1;
-let maxHights = new Array<number>(maxSize).fill(0);
-console.log('maxLength: ', maxLength);
-console.log('maxSize: ', maxSize);
-
+let maxHights = new Array<number>(maxSize);
 
 for (let index = 0; index < maxSize; index++) {
     let rock = rocks[index % rocks.length];
@@ -120,6 +117,7 @@ for (let index = 0; index < maxSize; index++) {
                         bottomMax = rockPart;
                     }
                 });
+                // Fill maxHights
                 maxHights[index] = bottomMax;
                 break;
             }
@@ -129,29 +127,37 @@ for (let index = 0; index < maxSize; index++) {
     } while(!stopFall);
 }
 
-// Find pattern in maxHights
+// Find period in maxHights
 let period = -1;
-let maxOffset = 0;
-for(let index = 1; index < maxLength; index++) {
+let startIndex = -1;
+for(let index = 0; index < maxLength; index++) {
     let isPeriod = true;
-    let offset = 0;
-    let diff = maxHights[index];
-    while(isPeriod && offset < maxSize) {
-        let current = maxHights[index + offset];
-        let afterOffset = maxHights[index * 2 + offset];
-        if(afterOffset - current !== diff) {
-            isPeriod = false;
+    for(let offset = 1; offset < maxLength; offset++) {
+        let diff = maxHights[index + offset] - maxHights[index];
+        isPeriod = true;
+
+        for(let periodIndex = index + 1; periodIndex + offset < maxSize; periodIndex++) {
+            let currentDiff = maxHights[periodIndex + offset] - maxHights[periodIndex];
+            if(diff !== currentDiff) {
+                isPeriod = false;
+                break;
+            }
         }
-        offset++;
-        if(offset > maxOffset) {
-            maxOffset = offset;
+        if(isPeriod) {
+            period = offset;
+            startIndex = index;
+            break;
         }
     }
     if(isPeriod) {
-        period = index;
         break;
     }
 }
 
-console.log('maxOffset: ', maxOffset);
-console.log('Period: ', period);
+let totalRocks = 1_000_000_000_000;
+let periodHeight = maxHights[startIndex + period] - maxHights[startIndex];
+let quotient = Math.floor(totalRocks/period);
+let outOfCycleRocks = totalRocks % period;
+let height = maxHights[outOfCycleRocks - 1] + periodHeight * quotient;
+
+console.log('Units tall: ', height);
